@@ -1,0 +1,350 @@
+2026-07-24 01:39:52.260 [main] INFO  c.s.backend.BackendApplicationTests - Starting BackendApplicationTests using Java 17.0.19 with PID 2634684 (started by shyhoon-moontaka in /home/shyhoon-moontaka/Documents/Spring Boot/SLP/v1/backend)
+2026-07-24 01:39:52.274 [main] DEBUG c.s.backend.BackendApplicationTests - Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-07-24 01:39:52.275 [main] INFO  c.s.backend.BackendApplicationTests - The following 1 profile is active: "dev"
+2026-07-24 01:39:52.800 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.0.Final
+2026-07-24 01:39:53.530 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-24 01:39:53.613 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 70 ms. Found 6 JPA repository interfaces.
+2026-07-24 01:39:54.542 [main] INFO  org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-24 01:39:54.612 [main] INFO  org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-07-24 01:39:55.124 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-24 01:39:55.162 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Starting...
+2026-07-24 01:39:55.352 [main] INFO  com.zaxxer.hikari.pool.HikariPool - slp-hikari-pool - Added connection org.postgresql.jdbc.PgConnection@712e4b18
+2026-07-24 01:39:55.354 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Start completed.
+2026-07-24 01:39:55.387 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-24 01:39:55.410 [main] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:5432/slp_db]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 18.3
+	Default catalog/schema: slp_db/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-24 01:39:56.627 [main] INFO  org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-24 01:39:56.687 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 01:39:56.800 [main] INFO  o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-24 01:39:57.072 [main] INFO  o.s.s.c.a.a.c.InitializeAuthenticationProviderBeanManagerConfigurer$InitializeAuthenticationProviderManagerConfigurer - Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-07-24 01:39:57.073 [main] WARN  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-07-24 01:39:58.382 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+2026-07-24 01:39:58.473 [main] INFO  c.s.backend.BackendApplicationTests - Started BackendApplicationTests in 6.77 seconds (process running for 8.419)
+2026-07-24 01:39:59.067 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 01:39:59.070 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown initiated...
+2026-07-24 01:39:59.074 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown completed.
+2026-07-24 01:40:16.808 [main] INFO  c.s.backend.BackendApplicationTests - Starting BackendApplicationTests using Java 17.0.19 with PID 2635633 (started by shyhoon-moontaka in /home/shyhoon-moontaka/Documents/Spring Boot/SLP/v1/backend)
+2026-07-24 01:40:16.810 [main] DEBUG c.s.backend.BackendApplicationTests - Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-07-24 01:40:16.811 [main] INFO  c.s.backend.BackendApplicationTests - The following 1 profile is active: "dev"
+2026-07-24 01:40:17.307 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.0.Final
+2026-07-24 01:40:18.124 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-24 01:40:18.214 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 79 ms. Found 6 JPA repository interfaces.
+2026-07-24 01:40:18.986 [main] INFO  org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-24 01:40:19.075 [main] INFO  org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-07-24 01:40:19.636 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-24 01:40:19.690 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Starting...
+2026-07-24 01:40:19.907 [main] INFO  com.zaxxer.hikari.pool.HikariPool - slp-hikari-pool - Added connection org.postgresql.jdbc.PgConnection@7272914b
+2026-07-24 01:40:19.909 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Start completed.
+2026-07-24 01:40:19.946 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-24 01:40:19.972 [main] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:5432/slp_db]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 18.3
+	Default catalog/schema: slp_db/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-24 01:40:21.392 [main] INFO  org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-24 01:40:21.461 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 01:40:21.581 [main] INFO  o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-24 01:40:21.879 [main] INFO  o.s.s.c.a.a.c.InitializeAuthenticationProviderBeanManagerConfigurer$InitializeAuthenticationProviderManagerConfigurer - Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-07-24 01:40:21.880 [main] WARN  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-07-24 01:40:23.303 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+2026-07-24 01:40:23.395 [main] INFO  c.s.backend.BackendApplicationTests - Started BackendApplicationTests in 7.137 seconds (process running for 8.606)
+2026-07-24 01:40:24.021 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 01:40:24.025 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown initiated...
+2026-07-24 01:40:24.029 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown completed.
+2026-07-24 01:47:06.637 [main] INFO  c.s.backend.BackendApplicationTests - Starting BackendApplicationTests using Java 17.0.19 with PID 2649936 (started by shyhoon-moontaka in /home/shyhoon-moontaka/Documents/Spring Boot/SLP/v1/backend)
+2026-07-24 01:47:06.647 [main] DEBUG c.s.backend.BackendApplicationTests - Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-07-24 01:47:06.648 [main] INFO  c.s.backend.BackendApplicationTests - The following 1 profile is active: "dev"
+2026-07-24 01:47:07.203 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.0.Final
+2026-07-24 01:47:07.928 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-24 01:47:08.014 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 71 ms. Found 6 JPA repository interfaces.
+2026-07-24 01:47:08.748 [main] INFO  org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-24 01:47:08.829 [main] INFO  org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-07-24 01:47:09.512 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-24 01:47:09.557 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Starting...
+2026-07-24 01:47:09.788 [main] INFO  com.zaxxer.hikari.pool.HikariPool - slp-hikari-pool - Added connection org.postgresql.jdbc.PgConnection@4b86a656
+2026-07-24 01:47:09.790 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Start completed.
+2026-07-24 01:47:09.828 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-24 01:47:09.855 [main] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:5432/slp_db]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 18.3
+	Default catalog/schema: slp_db/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-24 01:47:11.280 [main] INFO  org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-24 01:47:11.372 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 01:47:11.496 [main] INFO  o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-24 01:47:12.004 [main] INFO  o.s.s.c.a.a.c.InitializeAuthenticationProviderBeanManagerConfigurer$InitializeAuthenticationProviderManagerConfigurer - Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-07-24 01:47:12.005 [main] WARN  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-07-24 01:47:13.600 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+2026-07-24 01:47:13.704 [main] INFO  c.s.backend.BackendApplicationTests - Started BackendApplicationTests in 7.639 seconds (process running for 9.335)
+2026-07-24 01:47:14.332 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 01:47:14.338 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown initiated...
+2026-07-24 01:47:14.341 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown completed.
+2026-07-24 01:48:01.595 [main] INFO  c.s.backend.BackendApplicationTests - Starting BackendApplicationTests using Java 17.0.19 with PID 2651959 (started by shyhoon-moontaka in /home/shyhoon-moontaka/Documents/Spring Boot/SLP/v1/backend)
+2026-07-24 01:48:01.597 [main] DEBUG c.s.backend.BackendApplicationTests - Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-07-24 01:48:01.598 [main] INFO  c.s.backend.BackendApplicationTests - The following 1 profile is active: "dev"
+2026-07-24 01:48:02.127 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.0.Final
+2026-07-24 01:48:02.871 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-24 01:48:02.972 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 87 ms. Found 6 JPA repository interfaces.
+2026-07-24 01:48:03.777 [main] INFO  org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-24 01:48:03.842 [main] INFO  org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-07-24 01:48:04.464 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-24 01:48:04.508 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Starting...
+2026-07-24 01:48:04.718 [main] INFO  com.zaxxer.hikari.pool.HikariPool - slp-hikari-pool - Added connection org.postgresql.jdbc.PgConnection@1117cc7c
+2026-07-24 01:48:04.720 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Start completed.
+2026-07-24 01:48:04.756 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-24 01:48:04.784 [main] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:5432/slp_db]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 18.3
+	Default catalog/schema: slp_db/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-24 01:48:06.213 [main] INFO  org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-24 01:48:06.286 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 01:48:06.422 [main] INFO  o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-24 01:48:06.765 [main] INFO  o.s.s.c.a.a.c.InitializeAuthenticationProviderBeanManagerConfigurer$InitializeAuthenticationProviderManagerConfigurer - Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-07-24 01:48:06.767 [main] WARN  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-07-24 01:48:08.357 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+2026-07-24 01:48:08.472 [main] INFO  c.s.backend.BackendApplicationTests - Started BackendApplicationTests in 7.461 seconds (process running for 9.054)
+2026-07-24 01:48:09.126 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 01:48:09.131 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown initiated...
+2026-07-24 01:48:09.135 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown completed.
+2026-07-24 02:28:18.267 [main] INFO  c.s.backend.BackendApplicationTests - Starting BackendApplicationTests using Java 17.0.19 with PID 2736146 (started by shyhoon-moontaka in /home/shyhoon-moontaka/Documents/Spring Boot/SLP/v1/backend)
+2026-07-24 02:28:18.270 [main] DEBUG c.s.backend.BackendApplicationTests - Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-07-24 02:28:18.272 [main] INFO  c.s.backend.BackendApplicationTests - The following 1 profile is active: "dev"
+2026-07-24 02:28:19.075 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.0.Final
+2026-07-24 02:28:20.477 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-24 02:28:20.612 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 118 ms. Found 6 JPA repository interfaces.
+2026-07-24 02:28:21.759 [main] INFO  org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-24 02:28:21.877 [main] INFO  org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-07-24 02:28:22.714 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-24 02:28:22.772 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Starting...
+2026-07-24 02:28:23.095 [main] INFO  com.zaxxer.hikari.pool.HikariPool - slp-hikari-pool - Added connection org.postgresql.jdbc.PgConnection@7272914b
+2026-07-24 02:28:23.098 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Start completed.
+2026-07-24 02:28:23.152 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-24 02:28:23.192 [main] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:5432/slp_db]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 18.3
+	Default catalog/schema: slp_db/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-24 02:28:25.697 [main] INFO  org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-24 02:28:25.796 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 02:28:25.953 [main] INFO  o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-24 02:28:26.403 [main] INFO  o.s.s.c.a.a.c.InitializeAuthenticationProviderBeanManagerConfigurer$InitializeAuthenticationProviderManagerConfigurer - Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-07-24 02:28:26.404 [main] WARN  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-07-24 02:28:28.670 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+2026-07-24 02:28:28.796 [main] INFO  c.s.backend.BackendApplicationTests - Started BackendApplicationTests in 11.396 seconds (process running for 13.87)
+2026-07-24 02:28:29.789 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 02:28:29.795 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown initiated...
+2026-07-24 02:28:29.801 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown completed.
+2026-07-24 02:28:47.981 [main] INFO  c.s.backend.BackendApplicationTests - Starting BackendApplicationTests using Java 17.0.19 with PID 2737486 (started by shyhoon-moontaka in /home/shyhoon-moontaka/Documents/Spring Boot/SLP/v1/backend)
+2026-07-24 02:28:47.984 [main] DEBUG c.s.backend.BackendApplicationTests - Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-07-24 02:28:47.993 [main] INFO  c.s.backend.BackendApplicationTests - The following 1 profile is active: "dev"
+2026-07-24 02:28:48.635 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.0.Final
+2026-07-24 02:28:49.606 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-24 02:28:49.700 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 80 ms. Found 6 JPA repository interfaces.
+2026-07-24 02:28:50.477 [main] INFO  org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-24 02:28:50.544 [main] INFO  org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-07-24 02:28:51.088 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-24 02:28:51.132 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Starting...
+2026-07-24 02:28:51.363 [main] INFO  com.zaxxer.hikari.pool.HikariPool - slp-hikari-pool - Added connection org.postgresql.jdbc.PgConnection@7272914b
+2026-07-24 02:28:51.365 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Start completed.
+2026-07-24 02:28:51.404 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-24 02:28:51.434 [main] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:5432/slp_db]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 18.3
+	Default catalog/schema: slp_db/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-24 02:28:52.904 [main] INFO  org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-24 02:28:52.968 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 02:28:53.109 [main] INFO  o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-24 02:28:53.442 [main] INFO  o.s.s.c.a.a.c.InitializeAuthenticationProviderBeanManagerConfigurer$InitializeAuthenticationProviderManagerConfigurer - Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-07-24 02:28:53.444 [main] WARN  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-07-24 02:28:55.531 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+2026-07-24 02:28:55.630 [main] INFO  c.s.backend.BackendApplicationTests - Started BackendApplicationTests in 8.233 seconds (process running for 9.885)
+2026-07-24 02:28:56.357 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 02:28:56.361 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown initiated...
+2026-07-24 02:28:56.365 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown completed.
+2026-07-24 02:50:33.962 [main] INFO  c.s.backend.BackendApplicationTests - Starting BackendApplicationTests using Java 17.0.19 with PID 2781839 (started by shyhoon-moontaka in /home/shyhoon-moontaka/Documents/Spring Boot/SLP/v1/backend)
+2026-07-24 02:50:33.964 [main] DEBUG c.s.backend.BackendApplicationTests - Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-07-24 02:50:33.965 [main] INFO  c.s.backend.BackendApplicationTests - The following 1 profile is active: "dev"
+2026-07-24 02:50:34.419 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.0.Final
+2026-07-24 02:50:35.019 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-24 02:50:35.088 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 58 ms. Found 6 JPA repository interfaces.
+2026-07-24 02:50:35.622 [main] INFO  org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-24 02:50:35.677 [main] INFO  org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-07-24 02:50:36.113 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-24 02:50:36.148 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Starting...
+2026-07-24 02:50:36.313 [main] INFO  com.zaxxer.hikari.pool.HikariPool - slp-hikari-pool - Added connection org.postgresql.jdbc.PgConnection@4797023d
+2026-07-24 02:50:36.314 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Start completed.
+2026-07-24 02:50:36.342 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-24 02:50:36.363 [main] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:5432/slp_db]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 18.3
+	Default catalog/schema: slp_db/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-24 02:50:37.441 [main] INFO  org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-24 02:50:37.490 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 02:50:37.562 [main] INFO  o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-24 02:50:37.808 [main] INFO  o.s.s.c.a.a.c.InitializeAuthenticationProviderBeanManagerConfigurer$InitializeAuthenticationProviderManagerConfigurer - Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-07-24 02:50:37.809 [main] WARN  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-07-24 02:50:38.975 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+2026-07-24 02:50:39.056 [main] INFO  c.s.backend.BackendApplicationTests - Started BackendApplicationTests in 5.523 seconds (process running for 6.694)
+2026-07-24 02:50:39.601 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 02:50:39.604 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown initiated...
+2026-07-24 02:50:39.607 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown completed.
+2026-07-24 02:53:20.157 [main] INFO  c.s.backend.BackendApplicationTests - Starting BackendApplicationTests using Java 17.0.19 with PID 2787331 (started by shyhoon-moontaka in /home/shyhoon-moontaka/Documents/Spring Boot/SLP/v1/backend)
+2026-07-24 02:53:20.163 [main] DEBUG c.s.backend.BackendApplicationTests - Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-07-24 02:53:20.164 [main] INFO  c.s.backend.BackendApplicationTests - The following 1 profile is active: "dev"
+2026-07-24 02:53:20.605 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.0.Final
+2026-07-24 02:53:21.314 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-24 02:53:21.403 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 77 ms. Found 6 JPA repository interfaces.
+2026-07-24 02:53:22.085 [main] INFO  org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-24 02:53:22.155 [main] INFO  org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-07-24 02:53:22.668 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-24 02:53:22.704 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Starting...
+2026-07-24 02:53:22.896 [main] INFO  com.zaxxer.hikari.pool.HikariPool - slp-hikari-pool - Added connection org.postgresql.jdbc.PgConnection@663f24e6
+2026-07-24 02:53:22.898 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Start completed.
+2026-07-24 02:53:22.931 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-24 02:53:22.955 [main] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:5432/slp_db]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 18.3
+	Default catalog/schema: slp_db/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-24 02:53:24.109 [main] INFO  org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-24 02:53:24.163 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 02:53:24.256 [main] INFO  o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-24 02:53:24.513 [main] INFO  o.s.s.c.a.a.c.InitializeAuthenticationProviderBeanManagerConfigurer$InitializeAuthenticationProviderManagerConfigurer - Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-07-24 02:53:24.513 [main] WARN  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-07-24 02:53:25.630 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+2026-07-24 02:53:25.699 [main] INFO  c.s.backend.BackendApplicationTests - Started BackendApplicationTests in 5.969 seconds (process running for 7.24)
+2026-07-24 02:53:26.223 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 02:53:26.226 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown initiated...
+2026-07-24 02:53:26.229 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown completed.
+2026-07-24 03:18:04.647 [main] INFO  c.s.backend.BackendApplicationTests - Starting BackendApplicationTests using Java 17.0.19 with PID 2839894 (started by shyhoon-moontaka in /home/shyhoon-moontaka/Documents/Spring Boot/SLP/v1/backend)
+2026-07-24 03:18:04.651 [main] DEBUG c.s.backend.BackendApplicationTests - Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-07-24 03:18:04.651 [main] INFO  c.s.backend.BackendApplicationTests - The following 1 profile is active: "dev"
+2026-07-24 03:18:05.141 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.0.Final
+2026-07-24 03:18:05.737 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-24 03:18:05.811 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 62 ms. Found 6 JPA repository interfaces.
+2026-07-24 03:18:06.494 [main] INFO  org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-24 03:18:06.554 [main] INFO  org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-07-24 03:18:06.994 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-24 03:18:07.032 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Starting...
+2026-07-24 03:18:07.214 [main] INFO  com.zaxxer.hikari.pool.HikariPool - slp-hikari-pool - Added connection org.postgresql.jdbc.PgConnection@663f24e6
+2026-07-24 03:18:07.216 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Start completed.
+2026-07-24 03:18:07.251 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-24 03:18:07.279 [main] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:5432/slp_db]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 18.3
+	Default catalog/schema: slp_db/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-24 03:18:08.479 [main] INFO  org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-24 03:18:08.540 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 03:18:08.644 [main] INFO  o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-24 03:18:08.958 [main] INFO  o.s.s.c.a.a.c.InitializeAuthenticationProviderBeanManagerConfigurer$InitializeAuthenticationProviderManagerConfigurer - Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-07-24 03:18:08.960 [main] WARN  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-07-24 03:18:10.268 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+2026-07-24 03:18:10.345 [main] INFO  c.s.backend.BackendApplicationTests - Started BackendApplicationTests in 6.175 seconds (process running for 7.457)
+2026-07-24 03:18:10.950 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 03:18:10.954 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown initiated...
+2026-07-24 03:18:10.957 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown completed.
+2026-07-24 03:18:32.978 [main] INFO  c.s.backend.BackendApplicationTests - Starting BackendApplicationTests using Java 17.0.19 with PID 2841067 (started by shyhoon-moontaka in /home/shyhoon-moontaka/Documents/Spring Boot/SLP/v1/backend)
+2026-07-24 03:18:32.983 [main] DEBUG c.s.backend.BackendApplicationTests - Running with Spring Boot v4.1.0, Spring v7.0.8
+2026-07-24 03:18:32.985 [main] INFO  c.s.backend.BackendApplicationTests - The following 1 profile is active: "dev"
+2026-07-24 03:18:33.461 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.0.Final
+2026-07-24 03:18:34.248 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-24 03:18:34.348 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 86 ms. Found 6 JPA repository interfaces.
+2026-07-24 03:18:35.083 [main] INFO  org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-07-24 03:18:35.155 [main] INFO  org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-07-24 03:18:35.786 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-24 03:18:35.833 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Starting...
+2026-07-24 03:18:36.068 [main] INFO  com.zaxxer.hikari.pool.HikariPool - slp-hikari-pool - Added connection org.postgresql.jdbc.PgConnection@4797023d
+2026-07-24 03:18:36.071 [main] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Start completed.
+2026-07-24 03:18:36.110 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-24 03:18:36.141 [main] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:5432/slp_db]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 18.3
+	Default catalog/schema: slp_db/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-07-24 03:18:37.495 [main] INFO  org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-24 03:18:37.552 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 03:18:37.670 [main] INFO  o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-07-24 03:18:37.974 [main] INFO  o.s.s.c.a.a.c.InitializeAuthenticationProviderBeanManagerConfigurer$InitializeAuthenticationProviderManagerConfigurer - Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-07-24 03:18:37.976 [main] WARN  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-07-24 03:18:39.462 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+2026-07-24 03:18:39.554 [main] INFO  c.s.backend.BackendApplicationTests - Started BackendApplicationTests in 7.077 seconds (process running for 8.45)
+2026-07-24 03:18:40.125 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-07-24 03:18:40.128 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown initiated...
+2026-07-24 03:18:40.132 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - slp-hikari-pool - Shutdown completed.
