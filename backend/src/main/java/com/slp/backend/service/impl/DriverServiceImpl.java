@@ -2,6 +2,8 @@ package com.slp.backend.service.impl;
 
 import com.slp.backend.dto.response.DriverResponse;
 import com.slp.backend.entity.Driver;
+import com.slp.backend.entity.DriverStatus;
+import com.slp.backend.entity.Role;
 import com.slp.backend.entity.User;
 import com.slp.backend.exception.BadRequestException;
 import com.slp.backend.exception.ResourceNotFoundException;
@@ -29,7 +31,7 @@ public class DriverServiceImpl implements DriverService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
-        if (user.getRole() != com.slp.backend.entity.Role.DRIVER) {
+        if (user.getRole() != Role.DRIVER) {
             throw new BadRequestException("User is not a driver. Role must be DRIVER.");
         }
 
@@ -42,7 +44,7 @@ public class DriverServiceImpl implements DriverService {
         Driver driver = Driver.builder()
                 .licenseNumber(licenseNumber)
                 .user(user)
-                .status("ACTIVE")
+                .status(DriverStatus.AVAILABLE)
                 .build();
 
         Driver saved = driverRepository.save(driver);
@@ -59,6 +61,15 @@ public class DriverServiceImpl implements DriverService {
 
     @Override
     @Transactional(readOnly = true)
+    public DriverResponse getDriverByUserId(Long userId) {
+        Driver driver = driverRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No driver profile exists for user id: " + userId));
+        return mapToResponse(driver);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<DriverResponse> getAllDrivers(Pageable pageable) {
         return driverRepository.findAll(pageable).map(this::mapToResponse);
     }
@@ -67,7 +78,7 @@ public class DriverServiceImpl implements DriverService {
     @Transactional(readOnly = true)
     public List<DriverResponse> getAvailableDrivers() {
         return driverRepository.findAll().stream()
-                .filter(d -> "ACTIVE".equals(d.getStatus()) && d.getVehicle() == null)
+                .filter(d -> d.getStatus() == DriverStatus.AVAILABLE && d.getVehicle() == null)
                 .map(this::mapToResponse)
                 .toList();
     }
@@ -75,15 +86,20 @@ public class DriverServiceImpl implements DriverService {
     @Override
     @Transactional(readOnly = true)
     public Page<DriverResponse> getAvailableDrivers(Pageable pageable) {
-        return driverRepository.findByStatusAndVehicleIsNull("ACTIVE", pageable)
+        return driverRepository.findByStatusAndVehicleIsNull(DriverStatus.AVAILABLE, pageable)
                 .map(this::mapToResponse);
     }
 
     @Override
     @Transactional
-    public DriverResponse updateDriverStatus(Long id, String status) {
+    public DriverResponse updateDriverStatus(Long id, DriverStatus status) {
         Driver driver = driverRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Driver not found with id: " + id));
+
+        // A driver who is on the road cannot be parked while still attached to a vehicle.
+        if (status != DriverStatus.ON_TRIP && driver.getVehicle() != null && status == DriverStatus.INACTIVE) {
+            throw new BadRequestException("Unassign the driver from the vehicle before deactivating");
+        }
 
         driver.setStatus(status);
         Driver saved = driverRepository.save(driver);
@@ -115,3 +131,4 @@ public class DriverServiceImpl implements DriverService {
         );
     }
 }
+

@@ -1,6 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from 'react';
 import {
-  Container,
   Paper,
   Typography,
   Box,
@@ -13,42 +12,49 @@ import {
   InputLabel,
   FormControl,
   Select,
-} from "@mui/material";
+  Divider,
+  Stack,
+} from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   Save as SaveIcon,
-} from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { shipmentService } from "../services/shipmentService";
-import { userService } from "../services/userService";
-import { vehicleService } from "../services/vehicleService";
+  Add as AddIcon,
+} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import PageHeader from '../components/PageHeader';
+import { useFeedback } from '../components/FeedbackProvider';
+import { useAuth } from '../context/AuthContext';
+import { shipmentService } from '../services/shipmentService';
+import { userService } from '../services/userService';
+import { vehicleService } from '../services/vehicleService';
+import { getErrorMessage } from '../utils/format';
 
 const ShipmentCreate = () => {
   const navigate = useNavigate();
   const { user, isAdmin, isDispatcher } = useAuth();
+  const { notifySuccess, notifyError } = useFeedback();
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [vehicles, setVehicles] = useState([]);
   const [loadingVehicles, setLoadingVehicles] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
-    senderId: "",
-    receiverId: "",
-    originStreet: "",
-    originCity: "",
-    originState: "",
-    originCountry: "",
-    originZip: "",
-    destStreet: "",
-    destCity: "",
-    destState: "",
-    destCountry: "",
-    destZip: "",
-    weight: "",
-    description: "",
-    vehicleId: "",
+    senderId: '',
+    receiverId: '',
+    originStreet: '',
+    originCity: '',
+    originState: '',
+    originCountry: '',
+    originZip: '',
+    destStreet: '',
+    destCity: '',
+    destState: '',
+    destCountry: '',
+    destZip: '',
+    weight: '',
+    description: '',
+    vehicleId: '',
   });
 
   useEffect(() => {
@@ -62,7 +68,8 @@ const ShipmentCreate = () => {
       const data = await userService.getLookup();
       setUsers(data || []);
     } catch (err) {
-      console.error("Failed to load users");
+      // Previously swallowed with console.error, which left the dropdowns silently empty.
+      setError(getErrorMessage(err, 'Failed to load the list of users.'));
     } finally {
       setLoadingUsers(false);
     }
@@ -73,7 +80,7 @@ const ShipmentCreate = () => {
       const data = await vehicleService.getAssignable(0, 100);
       setVehicles(data.content || []);
     } catch (err) {
-      console.error("Failed to load vehicles");
+      setError(getErrorMessage(err, 'Failed to load assignable vehicles.'));
     } finally {
       setLoadingVehicles(false);
     }
@@ -92,7 +99,13 @@ const ShipmentCreate = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
+
+    if (String(formData.senderId) === String(formData.receiverId)) {
+      setError('Sender and receiver must be different users.');
+      return;
+    }
+
     setSaving(true);
     try {
       const payload = {
@@ -102,44 +115,50 @@ const ShipmentCreate = () => {
         weight: formData.weight ? Number(formData.weight) : null,
         vehicleId: formData.vehicleId ? Number(formData.vehicleId) : null,
       };
-      await shipmentService.create(payload);
-      navigate("/shipments");
+      const created = await shipmentService.create(payload);
+      notifySuccess(
+        created?.trackingNumber
+          ? `Shipment ${created.trackingNumber} created.`
+          : 'Shipment created.',
+      );
+      navigate('/shipments');
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to create shipment");
+      const message = getErrorMessage(err, 'Failed to create shipment');
+      setError(message);
+      notifyError(message);
     } finally {
       setSaving(false);
     }
   };
 
+
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate("/shipments")}
-          sx={{ mr: 2 }}
-        >
-          Back
-        </Button>
-        <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-          Create Shipment
-        </Typography>
-      </Box>
+    <>
+      <PageHeader
+        overline="Shipments"
+        title="Create shipment"
+        subtitle="Book a new consignment and optionally assign a vehicle"
+        icon={<AddIcon />}
+        actions={
+          <Button startIcon={<ArrowBackIcon />} variant="outlined" onClick={() => navigate('/shipments')}>
+            Back to shipments
+          </Button>
+        }
+      />
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>
           {error}
         </Alert>
       )}
 
-      <Paper sx={{ p: 4, boxShadow: 2 }}>
-        <Box component="form" onSubmit={handleSubmit}>
-          <Typography
-            variant="h6"
-            gutterBottom
-            sx={{ mt: 2, mb: 2, color: "primary.main" }}
-          >
-            Sender & Receiver
+      <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box component="form" onSubmit={handleSubmit} noValidate>
+          <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+            Sender &amp; Receiver
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Sender and receiver must be two different accounts.
           </Typography>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 6 }}>
@@ -180,16 +199,16 @@ const ShipmentCreate = () => {
 
           {(isAdmin() || isDispatcher()) && (
             <>
-              <Typography
-                variant="h6"
-                gutterBottom
-                sx={{ mt: 4, mb: 2, color: "primary.main" }}
-              >
+              <Divider sx={{ my: 3 }} />
+              <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
                 Vehicle
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Optional at booking time; a dispatcher can assign it later.
               </Typography>
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <FormControl fullWidth>
+                  <FormControl fullWidth disabled={loadingVehicles}>
                     <InputLabel>Assign Vehicle (optional)</InputLabel>
                     <Select
                       name="vehicleId"
@@ -200,10 +219,8 @@ const ShipmentCreate = () => {
                       <MenuItem value="">None</MenuItem>
                       {vehicles.map((vehicle) => (
                         <MenuItem key={vehicle.id} value={vehicle.id}>
-                          {vehicle.plateNumber} - {vehicle.model}{" "}
-                          {vehicle.driverName
-                            ? `(${vehicle.driverName})`
-                            : "(No driver)"}
+                          {vehicle.plateNumber} - {vehicle.model}{' '}
+                          {vehicle.driverName ? `(${vehicle.driverName})` : '(No driver)'}
                         </MenuItem>
                       ))}
                     </Select>
@@ -213,11 +230,9 @@ const ShipmentCreate = () => {
             </>
           )}
 
-          <Typography
-            variant="h6"
-            gutterBottom
-            sx={{ mt: 4, mb: 2, color: "primary.main" }}
-          >
+          <Divider sx={{ my: 3 }} />
+
+          <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
             Origin Address
           </Typography>
           <Grid container spacing={2}>
@@ -273,11 +288,9 @@ const ShipmentCreate = () => {
             </Grid>
           </Grid>
 
-          <Typography
-            variant="h6"
-            gutterBottom
-            sx={{ mt: 4, mb: 2, color: "primary.main" }}
-          >
+          <Divider sx={{ my: 3 }} />
+
+          <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
             Destination Address
           </Typography>
           <Grid container spacing={2}>
@@ -333,11 +346,9 @@ const ShipmentCreate = () => {
             </Grid>
           </Grid>
 
-          <Typography
-            variant="h6"
-            gutterBottom
-            sx={{ mt: 4, mb: 2, color: "primary.main" }}
-          >
+          <Divider sx={{ my: 3 }} />
+
+          <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
             Additional Details
           </Typography>
           <Grid container spacing={2}>
@@ -349,7 +360,7 @@ const ShipmentCreate = () => {
                 value={formData.weight}
                 onChange={handleChange}
                 fullWidth
-                inputProps={{ min: 0, step: "0.01" }}
+                slotProps={{ htmlInput: { min: 0, step: '0.01' } }}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
@@ -365,24 +376,29 @@ const ShipmentCreate = () => {
             </Grid>
           </Grid>
 
-          <Box
-            sx={{ mt: 4, display: "flex", justifyContent: "flex-end", gap: 2 }}
+          <Divider sx={{ my: 3 }} />
+
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={2}
+            justifyContent="flex-end"
+            alignItems={{ xs: 'stretch', sm: 'center' }}
           >
-            <Button variant="outlined" onClick={() => navigate("/shipments")}>
+            <Button variant="outlined" onClick={() => navigate('/shipments')} disabled={saving}>
               Cancel
             </Button>
             <Button
               type="submit"
               variant="contained"
-              startIcon={<SaveIcon />}
-              disabled={saving}
+              startIcon={saving ? undefined : <SaveIcon />}
+              disabled={saving || loadingUsers}
             >
-              {saving ? <CircularProgress size={24} /> : "Create Shipment"}
+              {saving ? <CircularProgress size={24} color="inherit" /> : 'Create shipment'}
             </Button>
-          </Box>
+          </Stack>
         </Box>
       </Paper>
-    </Container>
+    </>
   );
 };
 

@@ -22,8 +22,9 @@ public class Driver {
     @Column(name = "license_number", unique = true, nullable = false)
     private String licenseNumber;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private DriverStatus status;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", unique = true, nullable = false)

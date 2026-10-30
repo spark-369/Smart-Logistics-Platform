@@ -5,6 +5,9 @@ import com.slp.backend.dto.response.TrackingEventResponse;
 import com.slp.backend.entity.Shipment;
 import com.slp.backend.entity.ShipmentStatus;
 import com.slp.backend.entity.TrackingEvent;
+import com.slp.backend.entity.Role;
+import com.slp.backend.entity.User;
+import com.slp.backend.exception.BadRequestException;
 import com.slp.backend.exception.ResourceNotFoundException;
 import com.slp.backend.exception.UnauthorizedException;
 import com.slp.backend.repository.ShipmentRepository;
@@ -33,25 +36,63 @@ public class TrackingServiceImpl implements TrackingService {
         Shipment shipment = shipmentRepository.findById(request.getShipmentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Shipment not found with id: " + request.getShipmentId()));
 
+        // A driver may only log progress for shipments assigned to them; staff may log for any.
+        User currentUser = currentUserUtil.getCurrentUser();
+        if (currentUser == null) {
+            throw new UnauthorizedException("You must be logged in");
+        }
+        if (currentUser.getRole() == Role.DRIVER) {
+            boolean assignedToDriver = shipment.getDriver() != null
+                    && shipment.getDriver().getUser().getId().equals(currentUser.getId());
+            if (!assignedToDriver) {
+                throw new UnauthorizedException("You can only add tracking events to shipments assigned to you");
+            }
+        }
+
+        // Validate and apply the transition *before* writing anything, so a rejected status (for
+        // example ASSIGNED without a driver and vehicle) leaves no partial event behind rather than
+        // depending on transaction rollback.
+        applyStatusFromEvent(shipment, request.getStatus());
+
         TrackingEvent event = TrackingEvent.builder()
                 .shipment(shipment)
-                .status(request.getStatus())
+                .status(request.getStatus().name())
                 .location(request.getLocation())
                 .description(request.getDescription())
                 .build();
 
-        TrackingEvent saved = trackingEventRepository.save(event);
+        return mapToResponse(trackingEventRepository.save(event));
+    }
 
-        if (ShipmentStatus.IN_TRANSIT.name().equalsIgnoreCase(request.getStatus())) {
-            shipment.setStatus(ShipmentStatus.IN_TRANSIT);
-            shipmentRepository.save(shipment);
-        } else if (ShipmentStatus.DELIVERED.name().equalsIgnoreCase(request.getStatus())) {
-            shipment.setStatus(ShipmentStatus.DELIVERED);
-            shipment.setActualDelivery(java.time.LocalDateTime.now());
-            shipmentRepository.save(shipment);
+    /**
+     * Synchronises the shipment's own status with a newly recorded journey event.
+     *
+     * <p>This is the only place a shipment status changes: there is no separate status-update
+     * endpoint, so the tracking history is by construction the authoritative record of the
+     * shipment's progress and the two can never disagree.
+     *
+     * <p>Rules:
+     * <ul>
+     *   <li>{@code ASSIGNED} is rejected unless both a driver and a vehicle are attached — the
+     *       shipment is not actually assigned without them.</li>
+     *   <li>{@code DELIVERED} stamps {@code actualDelivery}.</li>
+     *   <li>Any other status (including {@code PENDING} and {@code CANCELLED}) is applied as-is,
+     *       because the event is the audit record of that transition.</li>
+     * </ul>
+     */
+    private void applyStatusFromEvent(Shipment shipment, ShipmentStatus status) {
+        if (status == ShipmentStatus.ASSIGNED
+                && (shipment.getDriver() == null || shipment.getVehicle() == null)) {
+            throw new BadRequestException("Cannot assign shipment without driver and vehicle");
         }
 
-        return mapToResponse(saved);
+        shipment.setStatus(status);
+
+        if (status == ShipmentStatus.DELIVERED) {
+            shipment.setActualDelivery(java.time.LocalDateTime.now());
+        }
+
+        shipmentRepository.save(shipment);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.slp.backend.dto.response;
 
+import com.slp.backend.entity.DriverStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -14,7 +15,7 @@ public class DriverResponse {
     private String userName;
     private String email;
     private String phoneNumber;
-    private String status;
+    private DriverStatus status;
     private Long vehicleId;
     private String vehiclePlate;
     private LocalDateTime createdAt;

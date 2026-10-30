@@ -1,12 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
-  Container,
   Paper,
   Typography,
   Box,
-  TextField,
   Button,
-  Grid,
   Alert,
   CircularProgress,
   FormControl,
@@ -23,166 +20,272 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogContentText,
   DialogActions,
-  Card,
-  CardContent,
-  Chip,
+  TextField,
+  Stack,
 } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import {
+  Add as AddIcon,
+  Timeline as TrackingIcon,
+  Refresh as RefreshIcon,
+  PlaceOutlined as LocationIcon,
+} from '@mui/icons-material';
+import { useSearchParams } from 'react-router-dom';
+import PageHeader from '../components/PageHeader';
+import StatusChip from '../components/StatusChip';
+import { EmptyState, ErrorState, InlineLoading, TableSkeleton } from '../components/StateFeedback';
+import { useFeedback } from '../components/FeedbackProvider';
 import { trackingService } from '../services/trackingService';
 import { shipmentService } from '../services/shipmentService';
 import { useAuth } from '../context/AuthContext';
-
-const STATUSES = ['PENDING', 'ASSIGNED', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'];
+import { SHIPMENT_STATUSES, DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS, humanize } from '../constants';
+import { formatDateTime, getErrorMessage, orDash, unwrapPage } from '../utils/format';
 
 const TrackingManagement = () => {
-  const { isDriver, isDispatcher } = useAuth();
+  const { user, isDriver, isDispatcher, isAdmin } = useAuth();
+  const userRole = user?.role;
+  const { notifySuccess, notifyError } = useFeedback();
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [shipments, setShipments] = useState([]);
+  const [shipmentsLoading, setShipmentsLoading] = useState(true);
+  const [selectedShipmentId, setSelectedShipmentId] = useState(searchParams.get('shipmentId') ?? '');
   const [events, setEvents] = useState([]);
-  const [selectedShipmentId, setSelectedShipmentId] = useState('');
-  const [loading, setLoading] = useState(true);
   const [eventsLoading, setEventsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(DEFAULT_PAGE_SIZE);
   const [totalElements, setTotalElements] = useState(0);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  const loadShipments = async () => {
+  const loadShipments = useCallback(async () => {
+    setShipmentsLoading(true);
+    setError('');
     try {
+      // GET /api/shipments is scoped by role server-side: an ADMIN/DISPATCHER sees everything, a
+      // CUSTOMER sees only shipments they send or receive, and a DRIVER sees only shipments
+      // assigned to them. One call therefore gives every role exactly the right list.
+      //
+      // Do NOT use /api/shipments/driver/{driverId} here: that endpoint is ADMIN/DISPATCHER-only
+      // (by design, so a driver cannot enumerate another driver's work), so calling it as a DRIVER
+      // always answers 403.
       const data = await shipmentService.getAll(0, 100);
-      setShipments(data.content || []);
+      setShipments(unwrapPage(data).content);
     } catch (err) {
-      console.error('Failed to load shipments');
+      setError(getErrorMessage(err, 'Failed to load shipments.'));
+      setShipments([]);
+    } finally {
+      setShipmentsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadShipments();
   }, []);
 
   useEffect(() => {
-    if (selectedShipmentId) {
-      loadEvents();
-    }
-  }, [selectedShipmentId, page, rowsPerPage]);
+    loadShipments();
+  }, [loadShipments]);
 
-  const loadEvents = async () => {
-    if (!selectedShipmentId) return;
-    try {
-      setEventsLoading(true);
-      const data = await trackingService.getByShipmentIdPage(selectedShipmentId, page, rowsPerPage);
-      setEvents(data.content || []);
-      setTotalElements(data.totalElements || 0);
-    } catch (err) {
-      setError('Failed to load tracking events');
-    } finally {
-      setEventsLoading(false);
-    }
+  const loadEvents = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!selectedShipmentId) return;
+      if (silent) {
+        setRefreshing(true);
+      } else {
+        setEventsLoading(true);
+      }
+      setError('');
+      try {
+        const data = await trackingService.getByShipmentIdPage(
+          selectedShipmentId,
+          page,
+          rowsPerPage,
+        );
+        const { content, totalElements: total } = unwrapPage(data);
+        setEvents(content);
+        setTotalElements(total);
+      } catch (err) {
+        const message = getErrorMessage(err, 'Failed to load tracking events.');
+        setError(message);
+        setEvents([]);
+        setTotalElements(0);
+        if (silent) notifyError(message);
+      } finally {
+        setEventsLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [selectedShipmentId, page, rowsPerPage, notifyError],
+  );
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
+
+  const handleSelectShipment = (event) => {
+    const value = event.target.value;
+    setSelectedShipmentId(value);
+    setPage(0);
+    // Keep the selection in the URL so the view is shareable and refresh-safe.
+    setSearchParams(value ? { shipmentId: value } : {});
   };
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
+  const handleChangePage = (_event, newPage) => setPage(newPage);
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
+  const selectedShipment = shipments.find(
+    (shipment) => String(shipment.id) === String(selectedShipmentId),
+  );
+
+  const canAddEvent = isDriver() || isDispatcher() || isAdmin();
+
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-          Tracking Management
-        </Typography>
-        {(isDriver() || isDispatcher() || isAdmin()) && (
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setCreateDialogOpen(true)}
-            disabled={!selectedShipmentId}
-          >
-            Add Event
-          </Button>
-        )}
-      </Box>
+    <>
+      <PageHeader
+        overline="Operations"
+        title="Tracking management"
+        subtitle="Review and append journey events for a shipment"
+        icon={<TrackingIcon />}
+        actions={
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={() => loadEvents({ silent: true })}
+              disabled={refreshing || eventsLoading || !selectedShipmentId}
+            >
+              Refresh
+            </Button>
+            {canAddEvent && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setCreateDialogOpen(true)}
+                disabled={!selectedShipmentId}
+              >
+                Add event
+              </Button>
+            )}
+          </Stack>
+        }
+      />
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      <ErrorState message={error} onRetry={() => loadEvents()} />
 
-      <Paper sx={{ p: 3, mb: 3, boxShadow: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Select Shipment
+      <InlineLoading active={refreshing} />
+
+      <Paper sx={{ p: 2.5, mb: 3 }}>
+        <Typography variant="subtitle1" gutterBottom>
+          Select shipment
         </Typography>
-        <FormControl fullWidth>
-          <InputLabel>Shipment</InputLabel>
-          <Select
-            value={selectedShipmentId}
-            label="Shipment"
-            onChange={(e) => {
-              setSelectedShipmentId(e.target.value);
-              setPage(0);
-            }}
-          >
-            {shipments.map((shipment) => (
-              <MenuItem key={shipment.id} value={shipment.id}>
-                {shipment.trackingNumber} - {shipment.senderName} to {shipment.receiverName}
+        {shipmentsLoading ? (
+          <TableSkeleton rows={2} columns={3} />
+        ) : shipments.length === 0 ? (
+          <EmptyState
+            title={userRole === 'DRIVER' ? 'No shipments assigned to you' : 'No shipments available'}
+            description={
+              userRole === 'DRIVER'
+                ? 'A dispatcher has not assigned any shipments to you yet. Check back after your next dispatch.'
+                : 'Create a shipment first, then return here to record its journey.'
+            }
+            minHeight={120}
+          />
+        ) : (
+          <FormControl fullWidth>
+            <InputLabel>Shipment</InputLabel>
+            <Select value={selectedShipmentId} label="Shipment" onChange={handleSelectShipment}>
+              <MenuItem value="">
+                <em>None</em>
               </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+              {shipments.map((shipment) => (
+                <MenuItem key={shipment.id} value={String(shipment.id)}>
+                  {shipment.trackingNumber} — {shipment.originCity} → {shipment.destCity} (
+                  {humanize(shipment.status)})
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+
+        {selectedShipment && (
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
+            <StatusChip value={selectedShipment.status} domain="shipment" />
+            <Typography variant="body2" color="text.secondary">
+              {orDash(selectedShipment.senderName)} → {orDash(selectedShipment.receiverName)}
+            </Typography>
+            <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
+              {orDash(selectedShipment.trackingNumber)}
+            </Typography>
+          </Stack>
+        )}
       </Paper>
 
-      {selectedShipmentId && (
-        <Paper sx={{ boxShadow: 2 }}>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Location</TableCell>
-                  <TableCell>Description</TableCell>
-                  <TableCell>Timestamp</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {eventsLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={4} align="center">
-                      <CircularProgress />
-                    </TableCell>
-                  </TableRow>
-                ) : events.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} align="center">
-                      <Typography color="textSecondary" sx={{ py: 3 }}>No tracking events found</Typography>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  events.map((event) => (
-                    <TableRow key={event.id} hover>
-                      <TableCell>
-                        <Chip label={event.status} size="small" color="primary" />
-                      </TableCell>
-                      <TableCell>{event.location}</TableCell>
-                      <TableCell>{event.description}</TableCell>
-                      <TableCell>{new Date(event.timestamp).toLocaleString()}</TableCell>
+      {!selectedShipmentId ? (
+        <EmptyState
+          title="No shipment selected"
+          description="Choose a shipment above to view its tracking history."
+        />
+      ) : eventsLoading ? (
+        <Paper sx={{ overflow: 'hidden' }}>
+          <TableSkeleton rows={rowsPerPage > 10 ? 8 : rowsPerPage} columns={4} />
+        </Paper>
+      ) : (
+        <Paper sx={{ overflow: 'hidden' }}>
+          {events.length === 0 ? (
+            <EmptyState
+              title="No tracking events yet"
+              description="Append the first journey event for this shipment."
+              actionLabel={canAddEvent ? 'Add event' : undefined}
+              onAction={canAddEvent ? () => setCreateDialogOpen(true) : undefined}
+            />
+          ) : (
+            <>
+              <TableContainer sx={{ maxHeight: '60vh' }}>
+                <Table size="small" stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Location</TableCell>
+                      <TableCell>Description</TableCell>
+                      <TableCell>Timestamp</TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={totalElements}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
+                  </TableHead>
+                  <TableBody>
+                    {events.map((event) => (
+                      <TableRow key={event.id} hover>
+                        <TableCell>
+                          <StatusChip value={event.status} domain="shipment" />
+                        </TableCell>
+                        <TableCell>
+                          <Stack direction="row" spacing={0.5} alignItems="center">
+                            <LocationIcon fontSize="small" color="action" />
+                            <Typography variant="body2">{orDash(event.location)}</Typography>
+                          </Stack>
+                        </TableCell>
+                        <TableCell>{orDash(event.description)}</TableCell>
+                        <TableCell>
+                          <Typography variant="body2" noWrap>
+                            {formatDateTime(event.timestamp)}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={PAGE_SIZE_OPTIONS}
+                component="div"
+                count={totalElements}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </>
+          )}
         </Paper>
       )}
 
@@ -192,24 +295,29 @@ const TrackingManagement = () => {
         shipmentId={selectedShipmentId}
         onCreated={() => {
           setCreateDialogOpen(false);
+          notifySuccess('Tracking event recorded.');
           loadEvents();
         }}
       />
-    </Container>
+    </>
   );
 };
 
 const CreateTrackingEventDialog = ({ open, onClose, shipmentId, onCreated }) => {
-  const [formData, setFormData] = useState({
-    status: '',
-    location: '',
-    description: '',
-  });
+  const [formData, setFormData] = useState({ status: '', location: '', description: '' });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Reset the form each time the dialog is opened so stale values never leak between shipments.
+  useEffect(() => {
+    if (open) {
+      setFormData({ status: '', location: '', description: '' });
+      setError('');
+    }
+  }, [open]);
+
+  const handleChange = (event) => {
+    setFormData((previous) => ({ ...previous, [event.target.name]: event.target.value }));
   };
 
   const handleSubmit = async () => {
@@ -218,12 +326,13 @@ const CreateTrackingEventDialog = ({ open, onClose, shipmentId, onCreated }) => 
     try {
       await trackingService.createEvent({
         shipmentId: Number(shipmentId),
-        ...formData,
+        status: formData.status,
+        location: formData.location,
+        description: formData.description,
       });
-      setFormData({ status: '', location: '', description: '' });
       onCreated();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create tracking event');
+      setError(getErrorMessage(err, 'Failed to create tracking event.'));
     } finally {
       setSaving(false);
     }
@@ -231,26 +340,53 @@ const CreateTrackingEventDialog = ({ open, onClose, shipmentId, onCreated }) => 
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth disableRestoreFocus>
-      <DialogTitle>Add Tracking Event</DialogTitle>
+      <DialogTitle>Add tracking event</DialogTitle>
       <DialogContent>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>
+            {error}
+          </Alert>
+        )}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-          <FormControl fullWidth>
+          <FormControl fullWidth required>
             <InputLabel>Status</InputLabel>
             <Select name="status" value={formData.status} label="Status" onChange={handleChange}>
-              {STATUSES.map((status) => (
-                <MenuItem key={status} value={status}>{status}</MenuItem>
+              {SHIPMENT_STATUSES.map((status) => (
+                <MenuItem key={status} value={status}>
+                  {humanize(status)}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
-          <TextField name="location" label="Location" value={formData.location} onChange={handleChange} required fullWidth />
-          <TextField name="description" label="Description" value={formData.description} onChange={handleChange} fullWidth multiline rows={2} />
+          <TextField
+            name="location"
+            label="Location"
+            value={formData.location}
+            onChange={handleChange}
+            required
+            fullWidth
+          />
+          <TextField
+            name="description"
+            label="Description"
+            value={formData.description}
+            onChange={handleChange}
+            fullWidth
+            multiline
+            rows={2}
+          />
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSubmit} variant="contained" disabled={saving}>
-          {saving ? <CircularProgress size={24} color="inherit" /> : 'Create'}
+        <Button onClick={onClose} disabled={saving}>
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
+          disabled={saving || !formData.status || !formData.location}
+        >
+          {saving ? <CircularProgress size={22} color="inherit" /> : 'Add event'}
         </Button>
       </DialogActions>
     </Dialog>

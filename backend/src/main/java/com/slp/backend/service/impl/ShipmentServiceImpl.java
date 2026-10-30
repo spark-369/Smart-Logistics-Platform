@@ -1,7 +1,9 @@
 package com.slp.backend.service.impl;
 
 import com.slp.backend.dto.request.ShipmentRequest;
+import com.slp.backend.dto.response.PublicTrackingResponse;
 import com.slp.backend.dto.response.ShipmentResponse;
+import com.slp.backend.dto.response.TrackingEventResponse;
 import com.slp.backend.entity.*;
 import com.slp.backend.exception.BadRequestException;
 import com.slp.backend.exception.ResourceNotFoundException;
@@ -9,7 +11,6 @@ import com.slp.backend.exception.UnauthorizedException;
 import com.slp.backend.repository.ShipmentRepository;
 import com.slp.backend.repository.TrackingEventRepository;
 import com.slp.backend.repository.UserRepository;
-import com.slp.backend.repository.DriverRepository;
 import com.slp.backend.repository.VehicleRepository;
 import com.slp.backend.service.ShipmentService;
 import com.slp.backend.util.CurrentUserUtil;
@@ -28,7 +29,6 @@ public class ShipmentServiceImpl implements ShipmentService {
 
     private final ShipmentRepository shipmentRepository;
     private final UserRepository userRepository;
-    private final DriverRepository driverRepository;
     private final VehicleRepository vehicleRepository;
     private final TrackingEventRepository trackingEventRepository;
     private final CurrentUserUtil currentUserUtil;
@@ -36,6 +36,21 @@ public class ShipmentServiceImpl implements ShipmentService {
     @Override
     @Transactional
     public ShipmentResponse createShipment(ShipmentRequest request) {
+        User currentUser = currentUserUtil.getCurrentUser();
+        if (currentUser == null) {
+            throw new UnauthorizedException("You must be logged in");
+        }
+
+        // Customers may only book shipments they send. Staff book on behalf of anyone.
+        if (currentUser.getRole() == Role.CUSTOMER
+                && !currentUser.getId().equals(request.getSenderId())) {
+            throw new UnauthorizedException("You can only create shipments for yourself as the sender");
+        }
+
+        if (request.getSenderId().equals(request.getReceiverId())) {
+            throw new BadRequestException("Sender and receiver must be different users");
+        }
+
         User sender = userRepository.findById(request.getSenderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Sender not found"));
 
@@ -111,11 +126,50 @@ public class ShipmentServiceImpl implements ShipmentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Shipment not found with tracking number: " + trackingNumber));
 
         User currentUser = currentUserUtil.getCurrentUser();
-        if (currentUser != null && !canAccessShipment(currentUser, shipment)) {
+        if (currentUser == null) {
+            throw new UnauthorizedException("You must be logged in");
+        }
+        if (!canAccessShipment(currentUser, shipment)) {
             throw new UnauthorizedException("You don't have permission to access this shipment");
         }
 
         return mapToResponse(shipment);
+    }
+
+    /**
+     * Anonymous, redacted tracking lookup used by the public {@code /track/:trackingNumber} page.
+     * Never exposes customer PII or internal identifiers.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public PublicTrackingResponse getPublicTracking(String trackingNumber) {
+        Shipment shipment = shipmentRepository.findByTrackingNumber(trackingNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Shipment not found with tracking number: " + trackingNumber));
+
+        List<TrackingEventResponse> events = trackingEventRepository
+                .findByShipmentIdOrderByTimestampDesc(shipment.getId())
+                .stream()
+                .map(event -> new TrackingEventResponse(
+                        event.getId(),
+                        event.getShipment().getId(),
+                        event.getStatus(),
+                        event.getLocation(),
+                        event.getDescription(),
+                        event.getTimestamp()))
+                .toList();
+
+        return new PublicTrackingResponse(
+                shipment.getTrackingNumber(),
+                shipment.getStatus(),
+                shipment.getOriginCity(),
+                shipment.getOriginCountry(),
+                shipment.getDestCity(),
+                shipment.getDestCountry(),
+                shipment.getEstimatedDelivery(),
+                shipment.getActualDelivery(),
+                shipment.getCreatedAt(),
+                events
+        );
     }
 
     @Override
@@ -188,71 +242,10 @@ public class ShipmentServiceImpl implements ShipmentService {
 
     @Override
     @Transactional
-    public ShipmentResponse updateShipmentStatus(Long id, ShipmentStatus status) {
-        Shipment shipment = shipmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Shipment not found with id: " + id));
-
-        if (status == ShipmentStatus.ASSIGNED && (shipment.getDriver() == null || shipment.getVehicle() == null)) {
-            throw new BadRequestException("Cannot assign shipment without driver and vehicle");
-        }
-
-        ShipmentStatus oldStatus = shipment.getStatus();
-        shipment.setStatus(status);
-
-        if (status == ShipmentStatus.DELIVERED) {
-            shipment.setActualDelivery(java.time.LocalDateTime.now());
-        }
-
-        Shipment saved = shipmentRepository.save(shipment);
-
-        String description = "Status changed from " + oldStatus + " to " + status;
-        if (status == ShipmentStatus.DELIVERED) {
-            description = "Shipment delivered successfully";
-        }
-
-        trackingEventRepository.save(TrackingEvent.builder()
-                .shipment(saved)
-                .status(status.name())
-                .location("System")
-                .description(description)
-                .build());
-
-        return mapToResponse(saved);
-    }
-
-    @Override
-    @Transactional
     public void deleteShipment(Long id) {
         Shipment shipment = shipmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Shipment not found with id: " + id));
         shipmentRepository.delete(shipment);
-    }
-
-    @Transactional
-    public ShipmentResponse assignDriverAndVehicle(Long shipmentId, Long driverId, Long vehicleId) {
-        Shipment shipment = shipmentRepository.findById(shipmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Shipment not found"));
-
-        Driver driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new ResourceNotFoundException("Driver not found"));
-
-        Vehicle vehicle = vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found"));
-
-        shipment.setDriver(driver);
-        shipment.setVehicle(vehicle);
-        shipment.setStatus(ShipmentStatus.ASSIGNED);
-
-        Shipment saved = shipmentRepository.save(shipment);
-
-        trackingEventRepository.save(TrackingEvent.builder()
-                .shipment(saved)
-                .status(ShipmentStatus.ASSIGNED.name())
-                .location("System")
-                .description("Driver " + driver.getUser().getFirstName() + " " + driver.getUser().getLastName() + " and vehicle " + vehicle.getPlateNumber() + " assigned")
-                .build());
-
-        return mapToResponse(saved);
     }
 
     private boolean canAccessShipment(User user, Shipment shipment) {

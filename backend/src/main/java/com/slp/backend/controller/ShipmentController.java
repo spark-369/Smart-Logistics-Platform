@@ -1,8 +1,8 @@
 package com.slp.backend.controller;
 
 import com.slp.backend.dto.request.ShipmentRequest;
-import com.slp.backend.dto.request.UpdateShipmentStatusRequest;
 import com.slp.backend.dto.response.ApiResponse;
+import com.slp.backend.dto.response.PublicTrackingResponse;
 import com.slp.backend.dto.response.ShipmentResponse;
 import com.slp.backend.entity.ShipmentStatus;
 import com.slp.backend.service.ShipmentService;
@@ -45,8 +45,14 @@ public class ShipmentController {
         return ResponseEntity.ok(shipmentService.getShipmentById(id));
     }
 
+    @GetMapping("/public/tracking/{trackingNumber}")
+    @Operation(summary = "Public shipment tracking by tracking number (no authentication, redacted)")
+    public ResponseEntity<PublicTrackingResponse> publicTrack(@PathVariable String trackingNumber) {
+        return ResponseEntity.ok(shipmentService.getPublicTracking(trackingNumber));
+    }
+
     @GetMapping("/tracking/{trackingNumber}")
-    @Operation(summary = "Track shipment by tracking number")
+    @Operation(summary = "Track shipment by tracking number (authenticated, full details)")
     @PreAuthorize("hasAnyRole('ADMIN', 'DISPATCHER', 'DRIVER', 'CUSTOMER')")
     public ResponseEntity<ShipmentResponse> trackShipment(@PathVariable String trackingNumber) {
         return ResponseEntity.ok(shipmentService.getShipmentByTrackingNumber(trackingNumber));
@@ -73,12 +79,14 @@ public class ShipmentController {
         return ResponseEntity.ok(shipmentService.getShipmentsByDriver(driverId));
     }
 
-    @PatchMapping("/{id}/status")
-    @Operation(summary = "Update shipment status")
-    @PreAuthorize("hasAnyRole('DISPATCHER', 'ADMIN')")
-    public ResponseEntity<ShipmentResponse> updateShipmentStatus(@PathVariable Long id, @Valid @RequestBody UpdateShipmentStatusRequest request) {
-        return ResponseEntity.ok(shipmentService.updateShipmentStatus(id, request.getStatus()));
-    }
+    /*
+     * There is deliberately no PATCH /api/shipments/{id}/status endpoint.
+     *
+     * A shipment's status is derived exclusively from its journey history: every status change must
+     * be recorded as a tracking event through POST /api/tracking. That keeps the tracking timeline
+     * and the shipment's own status from ever disagreeing, and makes the event history a complete,
+     * auditable record of what happened rather than a partial one with out-of-band edits.
+     */
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete shipment")

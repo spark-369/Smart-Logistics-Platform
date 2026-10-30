@@ -17,8 +17,20 @@ export const shipmentService = {
     return response.data;
   },
 
+  /** Authenticated lookup returning the full shipment (subject to ownership rules). */
   getByTrackingNumber: async (trackingNumber) => {
-    const response = await api.get(`/api/shipments/tracking/${trackingNumber}`);
+    const response = await api.get(`/api/shipments/tracking/${encodeURIComponent(trackingNumber)}`);
+    return response.data;
+  },
+
+  /**
+   * Anonymous lookup used by the public /track page. Returns a redacted projection
+   * (no customer PII) and requires no bearer token.
+   */
+  getPublicTracking: async (trackingNumber) => {
+    const response = await api.get(
+      `/api/shipments/public/tracking/${encodeURIComponent(trackingNumber)}`,
+    );
     return response.data;
   },
 
@@ -28,13 +40,16 @@ export const shipmentService = {
     return response.data;
   },
 
+  /**
+   * Shipments assigned to one driver.
+   *
+   * ADMIN / DISPATCHER only — the backend deliberately forbids a DRIVER from calling this so they
+   * cannot enumerate another driver's work. A DRIVER wanting their own list must use `getAll()`,
+   * which the server scopes to their assignments.
+   */
   getByDriver: async (driverId) => {
+    // Returns a plain list (not a page): a single driver's assignment set is always small.
     const response = await api.get(`/api/shipments/driver/${driverId}`);
-    return response.data;
-  },
-
-  updateStatus: async (id, status) => {
-    const response = await api.patch(`/api/shipments/${id}/status`, { status });
     return response.data;
   },
 

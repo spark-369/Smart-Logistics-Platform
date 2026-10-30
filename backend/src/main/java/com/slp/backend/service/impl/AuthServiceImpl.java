@@ -7,13 +7,15 @@ import com.slp.backend.entity.Role;
 import com.slp.backend.entity.User;
 import com.slp.backend.exception.BadRequestException;
 import com.slp.backend.exception.ResourceNotFoundException;
-import com.slp.backend.exception.UnauthorizedException;
 import com.slp.backend.repository.UserRepository;
 import com.slp.backend.service.AuthService;
 import com.slp.backend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +38,12 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("Cannot self-register as ADMIN");
         }
 
+        // Only customers may self-register. Privileged accounts (DISPATCHER, DRIVER) are created by
+        // an administrator through /api/users, otherwise anyone could grant themselves dispatch rights.
+        if (request.getRole() != null && request.getRole() != Role.CUSTOMER) {
+            throw new BadRequestException("Self-registration is limited to the CUSTOMER role. Ask an administrator for a " + request.getRole() + " account.");
+        }
+
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -45,7 +53,6 @@ public class AuthServiceImpl implements AuthService {
                 .role(request.getRole() != null ? request.getRole() : Role.CUSTOMER)
                 .enabled(true)
                 .build();
-
         User savedUser = userRepository.save(user);
 
         String token = jwtUtil.generateToken(savedUser.getEmail());
@@ -61,21 +68,38 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 
+    /**
+     * Authenticates a user and issues a JWT.
+     *
+     * <p>Failure semantics matter to the SPA: a rejected login must answer <b>401 Unauthorized</b>
+     * so the client reports "invalid credentials" on the form. Throwing the project's own
+     * {@code UnauthorizedException} here would answer 403 (that type is reserved for
+     * "authenticated but not allowed"), which the SPA treats as a permissions problem and reacts to
+     * by bouncing the user to the /unauthorized screen. We therefore rethrow Spring's own
+     * authentication exceptions, which {@code GlobalExceptionHandler} maps to 401.
+     */
     @Override
     public AuthResponse login(LoginRequest request) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
-        } catch (Exception e) {
-            throw new UnauthorizedException("Invalid email or password");
+        } catch (DisabledException e) {
+            // Thrown by DaoAuthenticationProvider when the account is disabled.
+            throw new DisabledException("Account is disabled");
+        } catch (BadCredentialsException e) {
+            // Deliberately generic: never reveal whether the email exists.
+            throw new BadCredentialsException("Invalid email or password");
+        } catch (AuthenticationException e) {
+            throw new BadCredentialsException("Invalid email or password");
         }
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        if (!user.getEnabled()) {
-            throw new UnauthorizedException("Account is disabled");
+        // Belt and braces: some providers only surface `enabled` after a successful bind.
+        if (Boolean.FALSE.equals(user.getEnabled())) {
+            throw new DisabledException("Account is disabled");
         }
 
         String token = jwtUtil.generateToken(user.getEmail());

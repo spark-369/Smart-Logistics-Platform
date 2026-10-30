@@ -95,6 +95,44 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!--
+		  Spring Boot 4 split the old monolithic spring-boot-starter-test into per-technology
+		  modules, and TestRestTemplate moved from org.springframework.boot.test.web.client to
+		  org.springframework.boot.resttestclient.TestRestTemplate. The starter above no longer
+		  ships it, so the end-to-end HTTP tests need this module on the test classpath.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-resttestclient</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!--
+		  spring-boot-resttestclient does not depend on the module that owns RestTemplateBuilder
+		  (Boot 4 also moved that class out of spring-boot core). TestRestTemplate builds its
+		  underlying RestTemplate from a RestTemplateBuilder, so without this the
+		  TestRestTemplateTestAutoConfiguration class fails to load with NoClassDefFoundError.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-restclient</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- In-memory database used by the test suite so tests never need a live PostgreSQL. -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Enables @PreAuthorize/@PostAuthorize style security in @WebMvcTest slices. -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -102,6 +140,27 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<!-- Keep a single, predictable JDK; suppress the dynamic agent self-attach warning. -->
+					<argLine>-Xshare:off</argLine>
+					<!--
+					  Surefire only picks up *Test/*Tests by default, which would silently skip every
+					  end-to-end suite named *IT. Include them explicitly so `mvn test` runs the whole
+					  unit + integration suite.
+					-->
+					<includes>
+						<include>**/*Test.java</include>
+						<include>**/*Tests.java</include>
+						<include>**/*IT.java</include>
+					</includes>
+					<!-- Run integration tests in the same JVM fork to keep H2 state isolated per test. -->
+					<forkCount>1</forkCount>
+					<reuseForks>true</reuseForks>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

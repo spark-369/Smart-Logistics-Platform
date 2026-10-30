@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   TextField,
@@ -8,91 +8,302 @@ import {
   Alert,
   CircularProgress,
   Paper,
+  Grid,
+  Stepper,
+  Step,
+  StepLabel,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  InputAdornment,
+  Stack,
+  Link as MuiLink,
 } from '@mui/material';
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import { useNavigate, useParams } from 'react-router-dom';
+import {
+  Search as SearchIcon,
+  LocalShipping as ShippingIcon,
+  CheckCircle as DeliveredIcon,
+  Schedule as PendingIcon,
+  PlaceOutlined as LocationIcon,
+} from '@mui/icons-material';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import StatusChip from '../components/StatusChip';
+import { EmptyState } from '../components/StateFeedback';
 import { shipmentService } from '../services/shipmentService';
+import { SHIPMENT_STATUSES } from '../constants';
+import { formatDateTime, orDash, getErrorMessage } from '../utils/format';
+import { GRADIENTS } from '../theme/tokens';
 
-const TrackingPublic = () => {
+const PublicTracking = () => {
   const { trackingNumber } = useParams();
-  const navigate = useNavigate();
-  const [trackingNumberInput, setTrackingNumberInput] = useState(trackingNumber || '');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialNumber = trackingNumber ?? searchParams.get('trackingNumber') ?? '';
+
+  const [trackingNumberInput, setTrackingNumberInput] = useState(initialNumber);
   const [shipment, setShipment] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleTrack = async (e) => {
-    e.preventDefault();
-    if (!trackingNumberInput.trim()) return;
+  const lookup = useCallback(async (value) => {
+    const number = value?.trim();
+    if (!number) {
+      setError('Please enter a tracking number.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
-      const data = await shipmentService.getByTrackingNumber(trackingNumberInput.trim());
+      // Public, unauthenticated endpoint returning a redacted projection.
+      const data = await shipmentService.getPublicTracking(number);
       setShipment(data);
     } catch (err) {
-      setError('Shipment not found. Please check the tracking number.');
       setShipment(null);
+      setError(
+        err.response?.status === 404
+          ? `No shipment found for tracking number "${number}".`
+          : getErrorMessage(err, 'Unable to look up this shipment right now.'),
+      );
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // Support deep links such as /track/SLP-ABC12345.
+  useEffect(() => {
+    if (initialNumber) {
+      lookup(initialNumber);
+    }
+  }, [initialNumber, lookup]);
+
+  const handleTrack = (event) => {
+    event.preventDefault();
+    const number = trackingNumberInput.trim();
+    // Keep the URL shareable so a customer can bookmark or forward the result page.
+    setSearchParams(number ? { trackingNumber: number } : {});
+    lookup(number);
   };
 
+  const currentStep = shipment ? Math.max(SHIPMENT_STATUSES.indexOf(shipment.status), 0) : 0;
+
   return (
-    <Container maxWidth="sm" sx={{ mt: 4, mb: 4 }}>
-      <Paper sx={{ p: 4, boxShadow: 2 }}>
-        <Typography variant="h5" align="center" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-          Track Your Shipment
-        </Typography>
-        <Typography variant="body2" align="center" color="textSecondary" sx={{ mb: 3 }}>
-          Enter your tracking number to get the latest status
-        </Typography>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: { xs: 3, sm: 6 } }}>
+      <Container maxWidth="md">
+        <Paper sx={{ p: { xs: 2, sm: 4 }, borderRadius: 3, mb: 3 }}>
+          <Box sx={{ textAlign: 'center', mb: 3 }}>
+            <Box
+              sx={{
+                display: 'inline-flex',
+                width: 60,
+                height: 60,
+                borderRadius: 2.5,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundImage: GRADIENTS.brand,
+                color: '#ffffff',
+                mb: 1.5,
+              }}
+            >
+              <ShippingIcon sx={{ fontSize: 32 }} />
+            </Box>
+            <Typography variant="h5" gutterBottom>
+              Track your shipment
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Enter your tracking number to see the latest status. No account required.
+            </Typography>
+          </Box>
 
-        <Box component="form" onSubmit={handleTrack} sx={{ display: 'flex', gap: 1, mb: 3 }}>
-          <TextField
-            fullWidth
-            placeholder="Enter tracking number"
-            value={trackingNumberInput}
-            onChange={(e) => setTrackingNumberInput(e.target.value)}
-          />
-          <Button type="submit" variant="contained" disabled={loading}>
-            {loading ? <CircularProgress size={24} color="inherit" /> : 'Track'}
-          </Button>
-        </Box>
+          <Box
+            component="form"
+            onSubmit={handleTrack}
+            sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}
+          >
+            <TextField
+              fullWidth
+              label="Tracking number"
+              placeholder="SLP-XXXXXXXX"
+              value={trackingNumberInput}
+              onChange={(event) => setTrackingNumberInput(event.target.value)}
+              disabled={loading}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon fontSize="small" />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              size="large"
+              disabled={loading}
+              sx={{ minWidth: { sm: 140 } }}
+            >
+              {loading ? <CircularProgress size={22} color="inherit" /> : 'Track'}
+            </Button>
+          </Box>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          {error && (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              {error}
+            </Alert>
+          )}
 
-        {shipment && (
-          <Box sx={{ mt: 2, border: '1px solid #e0e0e0', borderRadius: 1, p: 2 }}>
-            <Typography variant="subtitle2" color="textSecondary">Tracking Number</Typography>
-            <Typography variant="body1" sx={{ fontFamily: 'monospace', fontWeight: 'bold', mb: 2 }}>{shipment.trackingNumber}</Typography>
+          <Typography variant="body2" align="center" sx={{ mt: 2 }}>
+            <MuiLink component={Link} to="/login" underline="hover">
+              Sign in
+            </MuiLink>{' '}
+            for full shipment details and history.
+          </Typography>
+        </Paper>
 
-            <Typography variant="subtitle2" color="textSecondary">Status</Typography>
-            <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 'bold', mb: 2 }}>{shipment.status}</Typography>
+        {shipment ? (
+          <Paper sx={{ p: { xs: 2, sm: 4 }, borderRadius: 3 }}>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              justifyContent="space-between"
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
+              spacing={2}
+              sx={{ mb: 3 }}
+            >
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Tracking number
+                </Typography>
+                <Typography variant="h6" sx={{ fontFamily: 'monospace' }}>
+                  {shipment.trackingNumber}
+                </Typography>
+              </Box>
+              <StatusChip
+                value={shipment.status}
+                domain="shipment"
+                size="medium"
+                icon={
+                  shipment.status === 'DELIVERED' ? (
+                    <DeliveredIcon fontSize="small" />
+                  ) : (
+                    <PendingIcon fontSize="small" />
+                  )
+                }
+              />
+            </Stack>
 
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 6 }}>
-                <Typography variant="subtitle2" color="textSecondary">Origin</Typography>
-                <Typography variant="body2">{shipment.originCity}, {shipment.originCountry}</Typography>
+            <Stepper activeStep={currentStep} alternativeLabel sx={{ mb: 4 }}>
+              {SHIPMENT_STATUSES.filter((status) => status !== 'CANCELLED').map((status) => (
+                <Step key={status} completed={SHIPMENT_STATUSES.indexOf(status) <= currentStep}>
+                  <StepLabel>{status.replace('_', ' ')}</StepLabel>
+                </Step>
+              ))}
+            </Stepper>
+
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Origin
+                  </Typography>
+                  <Typography variant="body1">
+                    {orDash(shipment.originCity)}, {orDash(shipment.originCountry)}
+                  </Typography>
+                </Paper>
               </Grid>
-              <Grid size={{ xs: 6 }}>
-                <Typography variant="subtitle2" color="textSecondary">Destination</Typography>
-                <Typography variant="body2">{shipment.destCity}, {shipment.destCountry}</Typography>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Destination
+                  </Typography>
+                  <Typography variant="body1">
+                    {orDash(shipment.destCity)}, {orDash(shipment.destCountry)}
+                  </Typography>
+                </Paper>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Estimated delivery
+                  </Typography>
+                  <Typography variant="body1">{formatDateTime(shipment.estimatedDelivery)}</Typography>
+                </Paper>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Delivered at
+                  </Typography>
+                  <Typography variant="body1">{formatDateTime(shipment.actualDelivery)}</Typography>
+                </Paper>
               </Grid>
             </Grid>
 
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle2" color="textSecondary">Sender</Typography>
-              <Typography variant="body2">{shipment.senderName}</Typography>
-            </Box>
-            <Box sx={{ mt: 1 }}>
-              <Typography variant="subtitle2" color="textSecondary">Receiver</Typography>
-              <Typography variant="body2">{shipment.receiverName}</Typography>
-            </Box>
-          </Box>
+            <Typography variant="h6" gutterBottom>
+              Journey history
+            </Typography>
+            {shipment.events?.length ? (
+              <TableContainer component={Paper} variant="outlined">
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Location</TableCell>
+                      <TableCell>Details</TableCell>
+                      <TableCell>When</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {shipment.events.map((event) => (
+                      <TableRow key={event.id} hover>
+                        <TableCell>
+                          <StatusChip value={event.status} domain="shipment" />
+                        </TableCell>
+                        <TableCell>
+                          <Stack direction="row" spacing={0.5} alignItems="center">
+                            <LocationIcon fontSize="small" color="action" />
+                            <Typography variant="body2">{orDash(event.location)}</Typography>
+                          </Stack>
+                        </TableCell>
+                        <TableCell>{orDash(event.description)}</TableCell>
+                        <TableCell>
+                          <Typography variant="body2" noWrap>
+                            {formatDateTime(event.timestamp)}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <Alert severity="info">No journey events have been recorded yet.</Alert>
+            )}
+          </Paper>
+        ) : (
+          !loading &&
+          !error && (
+            <EmptyState
+              title="Ready when you are"
+              description="Enter a tracking number above to see the current status and journey history."
+            />
+          )
         )}
-      </Paper>
-    </Container>
+
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ display: 'block', textAlign: 'center', mt: 3 }}
+        >
+          For privacy, public tracking shows only the shipment route and journey events.
+        </Typography>
+      </Container>
+    </Box>
   );
 };
 
-export default TrackingPublic;
+export default PublicTracking;
+

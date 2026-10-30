@@ -1,10 +1,106 @@
+:root {
+  color-scheme: light dark;
+  /* Keeps the sticky app bar and the page container aligned. */
+  --slp-topbar-height: 64px;
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
-  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* Prevent iOS from inflating text in landscape. */
+  -webkit-text-size-adjust: 100%;
+  overflow-y: scroll;
 }
+
+/* The React tree replaces the inline splash; make sure it fills the viewport. */
+#root > * {
+  min-height: 100%;
+}
+
+/*
+ * Print styles.
+ *
+ * Dispatch paperwork is routinely printed or saved as PDF from the shipment detail and list views,
+ * so navigation chrome is removed and tables are expanded to the full page.
+ */
+@media print {
+  nav,
+  header,
+  footer,
+  .MuiAppBar-root,
+  .MuiDrawer-root,
+  .MuiTablePagination-root,
+  .MuiSnackbar-root,
+  .MuiBackdrop-root {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  body {
+    background: #ffffff !important;
+  }
+
+  .MuiPaper-root,
+  .MuiCard-root {
+    box-shadow: none !important;
+    border: 1px solid #cccccc !important;
+    break-inside: avoid;
+  }
+
+  table {
+    width: 100% !important;
+  }
+
+  /* Force light colours on paper, regardless of the on-screen theme. */
+  .MuiTableCell-root,
+  .MuiTypography-root {
+    color: #000000 !important;
+  }
+}
+
+/* Respect users who ask the OS to reduce motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Visible focus ring for keyboard users (MUI only styles its own controls). */
+:focus-visible {
+  outline: 2px solid #1565c0;
+  outline-offset: 2px;
+}
+
+/* High-contrast mode: keep borders visible when the OS overrides colours. */
+@media (forced-colors: active) {
+  .MuiChip-root,
+  .MuiPaper-root,
+  .MuiCard-root {
+    border: 1px solid CanvasText;
+  }
+}
+
+

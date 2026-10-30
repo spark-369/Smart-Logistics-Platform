@@ -36,12 +36,14 @@ public class VehicleController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get vehicle by ID")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DISPATCHER', 'DRIVER')")
     public ResponseEntity<VehicleResponse> getVehicleById(@PathVariable Long id) {
         return ResponseEntity.ok(vehicleService.getVehicleById(id));
     }
 
     @GetMapping
     @Operation(summary = "Get all vehicles")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DISPATCHER')")
     public ResponseEntity<Page<VehicleResponse>> getAllVehicles(@PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(vehicleService.getAllVehicles(pageable));
     }

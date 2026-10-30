@@ -26,22 +26,38 @@ public class TrackingController {
         this.trackingService = trackingService;
     }
 
+    /**
+     * Appends a journey event.
+     *
+     * <p>DISPATCHER is included alongside ADMIN and DRIVER: dispatch staff are the people who
+     * actually record progress when a driver cannot, and the SPA has always shown them the
+     * "Add event" control. Omitting the role here produced a confusing 403 that looked like a bug
+     * in the UI. The per-shipment ownership rule for DRIVER lives in {@link TrackingService}.
+     */
     @PostMapping
     @Operation(summary = "Add tracking event")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DRIVER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DISPATCHER', 'DRIVER')")
     public ResponseEntity<TrackingEventResponse> addTrackingEvent(@Valid @RequestBody TrackingEventRequest request) {
         return new ResponseEntity<>(trackingService.addTrackingEvent(request), HttpStatus.CREATED);
     }
 
+    /**
+     * Reading history only requires an authenticated session; the service enforces that a DRIVER
+     * can only read shipments assigned to them.
+     */
     @GetMapping("/shipment/{shipmentId}")
     @Operation(summary = "Get tracking history for shipment")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<TrackingEventResponse>> getTrackingHistory(@PathVariable Long shipmentId) {
         return ResponseEntity.ok(trackingService.getTrackingHistory(shipmentId));
     }
 
     @GetMapping("/shipment/{shipmentId}/page")
     @Operation(summary = "Get tracking history for shipment (paginated)")
-    public ResponseEntity<Page<TrackingEventResponse>> getTrackingHistory(@PathVariable Long shipmentId, Pageable pageable) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Page<TrackingEventResponse>> getTrackingHistory(@PathVariable Long shipmentId,
+                                                                          @org.springframework.data.web.PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(trackingService.getTrackingHistory(shipmentId, pageable));
     }
 }
+

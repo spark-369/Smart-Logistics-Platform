@@ -3,6 +3,7 @@ package com.slp.backend.service.impl;
 import com.slp.backend.dto.request.VehicleRequest;
 import com.slp.backend.dto.response.VehicleResponse;
 import com.slp.backend.entity.Driver;
+import com.slp.backend.entity.DriverStatus;
 import com.slp.backend.entity.Vehicle;
 import com.slp.backend.entity.VehicleStatus;
 import com.slp.backend.exception.BadRequestException;
@@ -48,13 +49,18 @@ public class VehicleServiceImpl implements VehicleService {
                 throw new BadRequestException("Driver already assigned to a vehicle");
             }
 
+            // An assigned vehicle is by definition in use; the requested status is ignored.
             vehicle.setStatus(VehicleStatus.IN_USE);
-            driver.setStatus("ACTIVE");
+            driver.setStatus(DriverStatus.ON_TRIP);
             driver.setVehicle(vehicle);
             vehicle.setDriver(driver);
             driverRepository.save(driver);
         } else {
-            vehicle.setStatus(request.getStatus() != null ? request.getStatus() : VehicleStatus.AVAILABLE);
+            VehicleStatus requested = request.getStatus() != null ? request.getStatus() : VehicleStatus.AVAILABLE;
+            if (requested == VehicleStatus.IN_USE) {
+                throw new BadRequestException("A vehicle without a driver cannot be IN_USE");
+            }
+            vehicle.setStatus(requested);
         }
 
         Vehicle savedVehicle = vehicleRepository.save(vehicle);
@@ -154,7 +160,7 @@ public class VehicleServiceImpl implements VehicleService {
             throw new BadRequestException("Vehicle already has a driver assigned");
         }
 
-        driver.setStatus("ACTIVE");
+        driver.setStatus(DriverStatus.ON_TRIP);
         driverRepository.save(driver);
 
         vehicle.setDriver(driver);
@@ -174,7 +180,7 @@ public class VehicleServiceImpl implements VehicleService {
         }
 
         Driver driver = vehicle.getDriver();
-        driver.setStatus("ACTIVE");
+        driver.setStatus(DriverStatus.AVAILABLE);
         driver.setVehicle(null);
         driverRepository.save(driver);
 

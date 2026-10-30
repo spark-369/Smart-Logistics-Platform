@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  Container,
   Paper,
   Table,
   TableBody,
@@ -17,7 +16,6 @@ import {
   CircularProgress,
   Alert,
   TextField,
-  InputAdornment,
   FormControl,
   InputLabel,
   Select,
@@ -29,58 +27,79 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Tooltip,
+  Stack,
 } from '@mui/material';
 import {
   Add as AddIcon,
-  Search as SearchIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
+  ManageAccounts as UsersIcon,
+  Refresh as RefreshIcon,
+  FilterAltOff as ClearFiltersIcon,
 } from '@mui/icons-material';
-import { userService } from '../services/userService';
+import PageHeader from '../components/PageHeader';
+import SearchInput from '../components/SearchInput';
+import StatusChip from '../components/StatusChip';
+import { EmptyState, ErrorState, InlineLoading, TableSkeleton } from '../components/StateFeedback';
 import ConfirmDialog from '../components/ConfirmDialog';
-
-const ROLES = ['ADMIN', 'DISPATCHER', 'DRIVER', 'CUSTOMER'];
+import { useFeedback } from '../components/FeedbackProvider';
+import { userService } from '../services/userService';
+import { USER_ROLES, DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '../constants';
+import { useAuth } from '../context/AuthContext';
+import { getErrorMessage, orDash, unwrapPage } from '../utils/format';
 
 const Users = () => {
+  const { user: currentUser } = useAuth();
+  const { notifySuccess, notifyError } = useFeedback();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(DEFAULT_PAGE_SIZE);
   const [totalElements, setTotalElements] = useState(0);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
-  const [deleteId, setDeleteId] = useState(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  const loadUsers = async () => {
-    try {
-      setLoading(true);
-      let data;
-      if (roleFilter) {
-        data = await userService.getByRole(roleFilter, page, rowsPerPage);
+  const loadUsers = useCallback(
+    async ({ silent = false } = {}) => {
+      if (silent) {
+        setRefreshing(true);
       } else {
-        data = await userService.getAll(page, rowsPerPage);
+        setLoading(true);
       }
-      setUsers(data.content || []);
-      setTotalElements(data.totalElements || 0);
-    } catch (err) {
-      setError('Failed to load users');
-    } finally {
-      setLoading(false);
-    }
-  };
+      setError('');
+      try {
+        const data = roleFilter
+          ? await userService.getByRole(roleFilter, page, rowsPerPage)
+          : await userService.getAll(page, rowsPerPage);
+        const { content, totalElements: total } = unwrapPage(data);
+        setUsers(content);
+        setTotalElements(total);
+      } catch (err) {
+        const message = getErrorMessage(err, 'Failed to load users.');
+        setError(message);
+        setUsers([]);
+        setTotalElements(0);
+        if (silent) notifyError(message);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [page, rowsPerPage, roleFilter, notifyError],
+  );
 
   useEffect(() => {
     loadUsers();
-  }, [page, rowsPerPage, roleFilter]);
+  }, [loadUsers]);
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
+  const handleChangePage = (_event, newPage) => setPage(newPage);
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
@@ -88,146 +107,247 @@ const Users = () => {
   };
 
   const handleDelete = async () => {
-    setDeleteLoading(true);
     try {
-      await userService.delete(deleteId);
-      setDeleteId(null);
-      loadUsers();
+      await userService.delete(deleteTarget.id);
+      setDeleteTarget(null);
+      notifySuccess('User deleted.');
+      if (users.length === 1 && page > 0) {
+        setPage((current) => current - 1);
+      } else {
+        loadUsers();
+      }
     } catch (err) {
-      setError('Failed to delete user');
-    } finally {
-      setDeleteLoading(false);
+      setDeleteTarget(null);
+      const message = getErrorMessage(err, 'Failed to delete user.');
+      setError(message);
+      notifyError(message);
     }
   };
 
-  const handleEdit = (user) => {
-    setSelectedUser(user);
-    setEditDialogOpen(true);
-  };
-
-  const filteredUsers = users.filter((u) =>
-    u.email?.toLowerCase().includes(search.toLowerCase()) ||
-    u.firstName?.toLowerCase().includes(search.toLowerCase()) ||
-    u.lastName?.toLowerCase().includes(search.toLowerCase())
+  const term = search.trim().toLowerCase();
+  const filteredUsers = useMemo(
+    () =>
+      term
+        ? users.filter((user) =>
+            [user.email, user.firstName, user.lastName, user.phoneNumber]
+              .filter(Boolean)
+              .some((value) => value.toLowerCase().includes(term)),
+          )
+        : users,
+    [users, term],
   );
 
+  const hasFilters = Boolean(search || roleFilter);
+  const clearFilters = () => {
+    setSearch('');
+    setRoleFilter('');
+    setPage(0);
+  };
+
+
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-          Users
-        </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateDialogOpen(true)}>
-          Add User
-        </Button>
-      </Box>
+    <>
+      <PageHeader
+        overline="Administration"
+        title="Users"
+        subtitle={`${totalElements} account${totalElements === 1 ? '' : 's'} — manage roles and access`}
+        icon={<UsersIcon />}
+        actions={
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={() => loadUsers({ silent: true })}
+              disabled={refreshing || loading}
+            >
+              Refresh
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setCreateDialogOpen(true)}
+            >
+              Add user
+            </Button>
+          </Stack>
+        }
+      />
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      <ErrorState message={error} title="Could not load users" onRetry={() => loadUsers()} />
 
-      <Paper sx={{ p: 2, mb: 2, boxShadow: 2 }}>
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
+      <InlineLoading active={refreshing} />
+
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid size={{ xs: 12, md: 7 }}>
+            <SearchInput
               fullWidth
-              placeholder="Search users..."
+              label="Search"
+              placeholder="Name, email or phone"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
+              onChange={(value) => {
+                setSearch(value);
+                setPage(0);
               }}
             />
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ xs: 12, sm: 8, md: 3 }}>
             <FormControl fullWidth>
-              <InputLabel>Filter by Role</InputLabel>
+              <InputLabel>Role</InputLabel>
               <Select
                 value={roleFilter}
-                label="Filter by Role"
-                onChange={(e) => setRoleFilter(e.target.value)}
+                label="Role"
+                onChange={(event) => {
+                  setRoleFilter(event.target.value);
+                  setPage(0);
+                }}
               >
-                <MenuItem value="">All</MenuItem>
-                {ROLES.map((role) => (
-                  <MenuItem key={role} value={role}>{role}</MenuItem>
+                <MenuItem value="">All roles</MenuItem>
+                {USER_ROLES.map((role) => (
+                  <MenuItem key={role} value={role}>
+                    {role}
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
+          <Grid size={{ xs: 12, sm: 4, md: 2 }}>
+            <Button
+              fullWidth
+              variant="text"
+              startIcon={<ClearFiltersIcon />}
+              onClick={clearFilters}
+              disabled={!hasFilters}
+            >
+              Clear
+            </Button>
+          </Grid>
         </Grid>
       </Paper>
 
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <Paper sx={{ boxShadow: 2 }}>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Role</TableCell>
-                  <TableCell>Phone</TableCell>
-                  <TableCell>Enabled</TableCell>
-                  <TableCell align="right">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id} hover>
-                    <TableCell>{user.firstName} {user.lastName}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Chip label={user.role} size="small" color={user.role === 'ADMIN' ? 'secondary' : 'default'} />
-                    </TableCell>
-                    <TableCell>{user.phoneNumber || 'N/A'}</TableCell>
-                    <TableCell>
-                      <Chip label={user.enabled ? 'Yes' : 'No'} size="small" color={user.enabled ? 'success' : 'error'} />
-                    </TableCell>
-                    <TableCell align="right">
-                      <IconButton size="small" onClick={() => handleEdit(user)} color="primary">
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton size="small" onClick={() => setDeleteId(user.id)} color="error">
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={totalElements}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
+      <Paper sx={{ overflow: 'hidden' }}>
+        {loading ? (
+          <TableSkeleton rows={rowsPerPage > 10 ? 8 : rowsPerPage} columns={6} />
+        ) : filteredUsers.length === 0 ? (
+          <EmptyState
+            title={hasFilters ? 'No matching users' : 'No users yet'}
+            description={
+              hasFilters
+                ? 'Try clearing the search box or role filter.'
+                : 'Add the first user to get started.'
+            }
+            actionLabel={hasFilters ? 'Clear filters' : 'Add user'}
+            onAction={hasFilters ? clearFilters : () => setCreateDialogOpen(true)}
           />
+        ) : (
+          <>
+            <TableContainer sx={{ maxHeight: '65vh' }}>
+              <Table size="small" stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Email</TableCell>
+                    <TableCell>Phone</TableCell>
+                    <TableCell>Role</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell align="right">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredUsers.map((user) => (
+                    <TableRow key={user.id} hover>
+                      <TableCell>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {orDash(`${user.firstName ?? ''} ${user.lastName ?? ''}`.trim())}
+                          </Typography>
+                          {user.id === currentUser?.id && (
+                            <Chip label="You" size="small" variant="outlined" />
+                          )}
+                        </Stack>
+                      </TableCell>
+                      <TableCell>{orDash(user.email)}</TableCell>
+                      <TableCell>{orDash(user.phoneNumber)}</TableCell>
+                      <TableCell>
+                        <StatusChip value={user.role} domain="role" />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={user.enabled ? 'Enabled' : 'Disabled'}
+                          size="small"
+                          color={user.enabled ? 'success' : 'default'}
+                          variant={user.enabled ? 'filled' : 'outlined'}
+                        />
+                      </TableCell>
+                        <TableCell align="right">
+                          <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                            <Tooltip title="Edit">
+                              <IconButton
+                                size="small"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setEditDialogOpen(true);
+                                }}
+                                aria-label={`Edit user ${user.email}`}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip
+                              title={
+                                user.id === currentUser?.id
+                                  ? 'You cannot delete your own account'
+                                  : 'Delete'
+                              }
+                            >
+                              <span>
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  disabled={user.id === currentUser?.id}
+                                  onClick={() => setDeleteTarget(user)}
+                                  aria-label={`Delete user ${user.email}`}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+                          </Stack>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={PAGE_SIZE_OPTIONS}
+                component="div"
+                count={totalElements}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </>
+          )}
         </Paper>
-      )}
 
       <ConfirmDialog
-        open={!!deleteId}
-        onClose={() => setDeleteId(null)}
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
-        title="Delete User"
-        content="Are you sure you want to delete this user? This action cannot be undone."
-        loading={deleteLoading}
+        title="Delete user"
+        content={`Delete ${deleteTarget?.email ?? 'this user'}? This action cannot be undone.`}
+        confirmLabel="Delete user"
+        requireText={deleteTarget?.email}
       />
 
       <CreateUserDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
-        onCreate={() => {
+        onCreated={() => {
           setCreateDialogOpen(false);
+          notifySuccess('User created.');
           loadUsers();
         }}
       />
@@ -236,16 +356,17 @@ const Users = () => {
         open={editDialogOpen}
         onClose={() => setEditDialogOpen(false)}
         user={selectedUser}
-        onUpdate={() => {
+        onUpdated={() => {
           setEditDialogOpen(false);
+          notifySuccess('User updated.');
           loadUsers();
         }}
       />
-    </Container>
+    </>
   );
 };
 
-const CreateUserDialog = ({ open, onClose, onCreate }) => {
+const CreateUserDialog = ({ open, onClose, onCreated }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -257,8 +378,22 @@ const CreateUserDialog = ({ open, onClose, onCreate }) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        email: '',
+        password: '',
+        firstName: '',
+        lastName: '',
+        phoneNumber: '',
+        role: 'CUSTOMER',
+      });
+      setError('');
+    }
+  }, [open]);
+
+  const handleChange = (event) => {
+    setFormData((previous) => ({ ...previous, [event.target.name]: event.target.value }));
   };
 
   const handleSubmit = async () => {
@@ -266,53 +401,101 @@ const CreateUserDialog = ({ open, onClose, onCreate }) => {
     setSaving(true);
     try {
       await userService.create(formData);
-      setFormData({ email: '', password: '', firstName: '', lastName: '', phoneNumber: '', role: 'CUSTOMER' });
-      onCreate();
+      onCreated();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create user');
+      setError(getErrorMessage(err, 'Failed to create user.'));
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth disableRestoreFocus>
-      <DialogTitle>Add New User</DialogTitle>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth disableRestoreFocus>
+      <DialogTitle>Create user</DialogTitle>
       <DialogContent>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>
+            {error}
+          </Alert>
+        )}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
           <Grid container spacing={2}>
-            <Grid size={{ xs: 6 }}>
-              <TextField name="firstName" label="First Name" value={formData.firstName} onChange={handleChange} required fullWidth />
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                name="firstName"
+                label="First name"
+                value={formData.firstName}
+                onChange={handleChange}
+                required
+                fullWidth
+              />
             </Grid>
-            <Grid size={{ xs: 6 }}>
-              <TextField name="lastName" label="Last Name" value={formData.lastName} onChange={handleChange} required fullWidth />
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                name="lastName"
+                label="Last name"
+                value={formData.lastName}
+                onChange={handleChange}
+                required
+                fullWidth
+              />
             </Grid>
           </Grid>
-          <TextField name="email" label="Email" type="email" value={formData.email} onChange={handleChange} required fullWidth />
-          <TextField name="password" label="Password" type="password" value={formData.password} onChange={handleChange} required fullWidth />
-          <TextField name="phoneNumber" label="Phone Number" value={formData.phoneNumber} onChange={handleChange} fullWidth />
+          <TextField
+            name="email"
+            label="Email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            fullWidth
+          />
+          <TextField
+            name="phoneNumber"
+            label="Phone number"
+            value={formData.phoneNumber}
+            onChange={handleChange}
+            fullWidth
+          />
           <FormControl fullWidth>
             <InputLabel>Role</InputLabel>
             <Select name="role" value={formData.role} label="Role" onChange={handleChange}>
-              {ROLES.map((role) => (
-                <MenuItem key={role} value={role}>{role}</MenuItem>
+              {USER_ROLES.map((role) => (
+                <MenuItem key={role} value={role}>
+                  {role}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
+          <TextField
+            name="password"
+            label="Temporary password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            fullWidth
+            helperText="At least 6 characters. Ask the user to change it after signing in."
+          />
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSubmit} variant="contained" disabled={saving}>
-          {saving ? <CircularProgress size={24} color="inherit" /> : 'Create'}
+        <Button onClick={onClose} disabled={saving}>
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
+          disabled={saving || !formData.email || !formData.password}
+        >
+          {saving ? <CircularProgress size={22} color="inherit" /> : 'Create'}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-const EditUserDialog = ({ open, onClose, user, onUpdate }) => {
+const EditUserDialog = ({ open, onClose, user, onUpdated }) => {
   const [formData, setFormData] = useState({
     email: '',
     firstName: '',
@@ -325,22 +508,22 @@ const EditUserDialog = ({ open, onClose, user, onUpdate }) => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (user) {
+    if (open && user) {
       setFormData({
-        email: user.email || '',
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        phoneNumber: user.phoneNumber || '',
-        role: user.role || 'CUSTOMER',
+        email: user.email ?? '',
+        firstName: user.firstName ?? '',
+        lastName: user.lastName ?? '',
+        phoneNumber: user.phoneNumber ?? '',
+        role: user.role ?? 'CUSTOMER',
         enabled: user.enabled ?? true,
       });
+      setError('');
     }
-  }, [user]);
+  }, [open, user]);
 
-  const handleChange = (e) => {
-    const target = e.target;
-    const value = target.type === 'checkbox' ? target.checked : target.value;
-    setFormData({ ...formData, [target.name]: value });
+  const handleChange = (event) => {
+    const { name, value, type, checked } = event.target;
+    setFormData((previous) => ({ ...previous, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const handleSubmit = async () => {
@@ -349,54 +532,84 @@ const EditUserDialog = ({ open, onClose, user, onUpdate }) => {
     setSaving(true);
     try {
       await userService.update(user.id, formData);
-      onUpdate();
+      onUpdated();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update user');
+      setError(getErrorMessage(err, 'Failed to update user.'));
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth disableRestoreFocus>
-      <DialogTitle>Edit User</DialogTitle>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth disableRestoreFocus>
+      <DialogTitle>Edit user</DialogTitle>
       <DialogContent>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>
+            {error}
+          </Alert>
+        )}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
           <Grid container spacing={2}>
-            <Grid size={{ xs: 6 }}>
-              <TextField name="firstName" label="First Name" value={formData.firstName} onChange={handleChange} required fullWidth />
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                name="firstName"
+                label="First name"
+                value={formData.firstName}
+                onChange={handleChange}
+                required
+                fullWidth
+              />
             </Grid>
-            <Grid size={{ xs: 6 }}>
-              <TextField name="lastName" label="Last Name" value={formData.lastName} onChange={handleChange} required fullWidth />
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                name="lastName"
+                label="Last name"
+                value={formData.lastName}
+                onChange={handleChange}
+                required
+                fullWidth
+              />
             </Grid>
           </Grid>
-          <TextField name="email" label="Email" type="email" value={formData.email} onChange={handleChange} required fullWidth />
-          <TextField name="phoneNumber" label="Phone Number" value={formData.phoneNumber} onChange={handleChange} fullWidth />
+          <TextField
+            name="email"
+            label="Email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            fullWidth
+          />
+          <TextField
+            name="phoneNumber"
+            label="Phone number"
+            value={formData.phoneNumber}
+            onChange={handleChange}
+            fullWidth
+          />
           <FormControl fullWidth>
             <InputLabel>Role</InputLabel>
             <Select name="role" value={formData.role} label="Role" onChange={handleChange}>
-              {ROLES.map((role) => (
-                <MenuItem key={role} value={role}>{role}</MenuItem>
+              {USER_ROLES.map((role) => (
+                <MenuItem key={role} value={role}>
+                  {role}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
           <FormControlLabel
-            control={
-              <Switch
-                checked={formData.enabled}
-                onChange={handleChange}
-                name="enabled"
-              />
-            }
-            label="Enabled"
+            control={<Switch checked={formData.enabled} onChange={handleChange} name="enabled" />}
+            label="Account enabled"
           />
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose} disabled={saving}>
+          Cancel
+        </Button>
         <Button onClick={handleSubmit} variant="contained" disabled={saving}>
-          {saving ? <CircularProgress size={24} color="inherit" /> : 'Update'}
+          {saving ? <CircularProgress size={22} color="inherit" /> : 'Save changes'}
         </Button>
       </DialogActions>
     </Dialog>
